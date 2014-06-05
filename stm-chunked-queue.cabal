@@ -10,7 +10,7 @@ stability:     provisional
 homepage:      http://github.com/kholdstare/stm-chunked-queue/
 bug-reports:   http://github.com/kholdstare/stm-chunked-queue/issues
 copyright:     Copyright (C) 2014 Alexander Kondratskiy
-synopsis:      Thread communication queues that batch items/requests that occured close together in time
+synopsis:      Thread communication queues that group items/requests that occur close together in time
 description:   Todo
 build-type:    Custom
 --tested-with:   GHC == 7.4.1, GHC == 7.4.2, GHC == 7.6.1
@@ -44,6 +44,7 @@ library
     Control.Concurrent.STM.TChunkedQueue
 
   other-modules:
+    Control.Concurrent.STM.ChunkedQueue
 
   ghc-options: -threaded -Wall -fwarn-tabs -O2 -fdicts-cheap -funbox-strict-fields -fexcess-precision
 
