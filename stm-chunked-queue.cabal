@@ -42,6 +42,7 @@ library
 
   exposed-modules:
     Control.Concurrent.STM.TChunkedQueue
+    Control.Concurrent.STM.TMChunkedQueue
 
   other-modules:
     Control.Concurrent.STM.ChunkedQueue
