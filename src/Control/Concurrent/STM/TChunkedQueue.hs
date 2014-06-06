@@ -24,7 +24,6 @@ module Control.Concurrent.STM.TChunkedQueue (
 
 import Prelude             hiding (reads)
 import Control.Applicative ((<$>))
-{-import Control.Monad    (forever, void)-}
 import Control.Monad
 import Control.Monad.STM   (STM, retry, atomically)
 import Control.Concurrent.STM.TVar
@@ -59,6 +58,7 @@ drainTChunkedQueue (TChunkedQueue tChQueue) = do
         _ -> do
             writeTVar tChQueue (ChunkedQueue [])
             return chQueue
+
 
 -- | Drain everything contained in the @TChunkedQueue@. Doesn't block
 tryDrainTChunkedQueue :: TChunkedQueue a -> STM (ChunkedQueue a)
@@ -119,7 +119,7 @@ drainWithTimeoutTChunkedQueue delay queue = do
         items <- drainTChunkedQueue queue
         stashedQueue `writeManyTChunkedQueue` (consumeQueue items)
 
-    transferItems -- run tranfer once before timing, so we block on empty queue.
+    transferItems -- run transfer once before timing, which blocks on empty queue.
 
     withTimeout delay (forever transferItems)
     atomically $ drainTChunkedQueue stashedQueue
