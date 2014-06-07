@@ -1,12 +1,16 @@
 {-# LANGUAGE DoAndIfThenElse #-}
+{-# LANGUAGE RecordWildCards #-}
 module TestUtils (
 
     MaybeDrainFunc,
     DrainFunc,
     WriteFunc,
+    CloseFunc,
+    TestableChunkedQueue(..),
     QueueAction(..),
     consumingThread,
     runQueueActions,
+    testActions,
 
 ) where
 
@@ -19,9 +23,20 @@ import Control.Concurrent (threadDelay)
 
 import Control.Concurrent.STM.TChunkedQueue (ChunkedQueue, consumeQueue)
 
+import Test.Tasty.HUnit
+
 type MaybeDrainFunc q a =  (q a -> IO (Maybe (ChunkedQueue a)))
 type DrainFunc q a =  (q a -> IO (ChunkedQueue a))
 type WriteFunc q a =  (q a -> a -> STM ())
+type CloseFunc q a =  (q a -> STM ())
+
+data TestableChunkedQueue q a = TestableChunkedQueue {
+    createQueue :: IO (q a),
+    maybeDrain  :: MaybeDrainFunc q a,
+    drain       :: DrainFunc q a,
+    write       :: WriteFunc q a,
+    close       :: CloseFunc q a
+}
 
 consumingThread :: MaybeDrainFunc q a
                 -> DrainFunc q a
@@ -49,28 +64,37 @@ consumingThread maybeDrainFunc drainFunc queue areWeDone = go []
             else go allItems
 
 
-data QueueAction a = Enqueue [a] | Wait Int
+data QueueAction a = Enqueue [a] | Wait Int | Close
 
 
-runQueueActions :: MaybeDrainFunc q a
-                -> DrainFunc q a
-                -> WriteFunc q a
-                -> q a
+runQueueActions :: TestableChunkedQueue q a
                 -> [QueueAction a]
                 -> IO [Maybe [a]]
-runQueueActions maybeDrainFunc drainFunc writeFunc queue actions = do
+runQueueActions TestableChunkedQueue{..} actions = do
+    queue <- createQueue
     areWeDone <- atomically $ newTVar False
 
     asyncResults <- async $
-        consumingThread maybeDrainFunc drainFunc queue areWeDone
+        consumingThread maybeDrain drain queue areWeDone
 
-    let dumpToQueue = mapM_ (atomically . writeFunc queue) 
+    let dumpToQueue = mapM_ (atomically . write queue) 
 
     forM_ actions $ \action ->
         case action of
             Enqueue items -> dumpToQueue items
-            Wait delay -> threadDelay delay
+            Wait delay    -> threadDelay delay
+            Close         -> atomically $ close queue
 
     atomically $ writeTVar areWeDone True
 
     wait asyncResults
+
+
+testActions :: (Eq a, Show a)
+            => TestableChunkedQueue q a
+            -> [QueueAction a]
+            -> [Maybe [a]]
+            -> Assertion
+testActions queue actions expectations = do
+    results <- runQueueActions queue actions
+    assertEqual "items dequeued have to be grouped correctly" expectations results
