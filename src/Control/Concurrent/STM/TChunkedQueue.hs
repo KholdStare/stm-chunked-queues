@@ -1,6 +1,25 @@
 {-# OPTIONS_GHC -Wall -fwarn-tabs #-}
 {-# LANGUAGE DoAndIfThenElse #-}
 {-# LANGUAGE DeriveDataTypeable #-}
+
+----------------------------------------------------------------
+-- |
+-- Module      :  Control.Concurrent.STM.TChunkedQueue
+-- Copyright   :  Copyright (c) 2014 Alexander Kondratskiy
+-- License     :  BSD3
+-- Maintainer  :  Alexander Kondratskiy <kholdstare0.0@gmail.com>
+-- Portability :  non-portable (GHC STM, DeriveDataTypeable)
+--
+-- A version of @Control.Concurrent.STM.TQueue@ that allows complete draining.
+-- This makes it possible to chunk items based on a timeout or a "settle
+-- period". This is useful when items/requests arriving through the queue are
+-- too granular and have to be combined, while retaining responsiveness.
+--
+-- Some capabilities of @TQueue@ are missing (such as unget) due to design
+-- tradeoffs.
+--
+-- /Since: 0.1.0/
+------------------------------------------------------------------
 module Control.Concurrent.STM.TChunkedQueue (
 
     -- * The TChunkedQueue type
@@ -39,6 +58,7 @@ import Control.Concurrent.STM.ChunkedQueue
 
 ----------------------------------------------------------------
 
+-- | @TChunkedQueue@ is an abstract type representing a drainable FIFO queue.
 data TChunkedQueue a = TChunkedQueue
     {-# UNPACK #-} !(TVar (ChunkedQueue a))
     deriving Typeable
@@ -104,7 +124,9 @@ isEmptyTChunkedQueue (TChunkedQueue tChQueue) = do
 -- | Keep draining the queue until no more items are seen for at least
 -- the given timeout period. Blocks if the queue is empty to begin with,
 -- and starts timing after the first value appears in the queue.
-drainAndSettleTChunkedQueue :: Int -> TChunkedQueue a -> IO (ChunkedQueue a)
+drainAndSettleTChunkedQueue :: Int -- ^ settle period in microseconds
+                             -> TChunkedQueue a
+                             -> IO (ChunkedQueue a)
 drainAndSettleTChunkedQueue delay queue = do
     ChunkedQueue chunks <- atomically $ drainTChunkedQueue queue
     -- chunks by definition is non-empty here
@@ -122,7 +144,9 @@ drainAndSettleTChunkedQueue delay queue = do
 -- | Keep draining the queue for at least the specified time period. Blocks if
 -- the queue is empty to begin with, and starts timing as soon as the first
 -- value appears in the queue.
-drainWithTimeoutTChunkedQueue :: Int -> TChunkedQueue a -> IO (ChunkedQueue a)
+drainWithTimeoutTChunkedQueue :: Int -- ^ timeout in microseconds
+                               -> TChunkedQueue a
+                               -> IO (ChunkedQueue a)
 drainWithTimeoutTChunkedQueue delay queue = do
     stashedQueue <- newTChunkedQueueIO
 
@@ -140,4 +164,3 @@ drainWithTimeoutTChunkedQueue delay queue = do
 
 
 ----------------------------------------------------------------
------------------------------------------------------------ fin.

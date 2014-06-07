@@ -11,6 +11,9 @@ module Control.Concurrent.STM.ChunkedQueue (
 
 import Data.Monoid
 
+
+-- | Abstract type representing a chunked queue. Acts as API for drainining
+-- queues.
 data ChunkedQueue a = ChunkedQueue [Chunk a]
 
 instance Monoid (ChunkedQueue a) where
@@ -18,6 +21,7 @@ instance Monoid (ChunkedQueue a) where
     (ChunkedQueue []) `mappend` b = b
     (ChunkedQueue a) `mappend` (ChunkedQueue b) = ChunkedQueue (b ++ a)
 
+-- | Consume a @ChunkedQueue@ into a list
 consumeQueue :: ChunkedQueue a -> [a]
 consumeQueue (ChunkedQueue chunks) = go [] chunks
     where

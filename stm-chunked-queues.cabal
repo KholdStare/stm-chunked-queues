@@ -1,8 +1,8 @@
 name:          stm-chunked-queues
-category:      Todo
+category:      Concurrency
 version:       0.1.0.0
 license:       BSD3
-cabal-version: >= 1.18
+cabal-version: >= 1.8
 license-file:  LICENSE
 author:        Alexander Kondratskiy
 maintainer:    Alexander Kondratskiy <kholdstare0.0@gmail.com>
@@ -10,18 +10,13 @@ stability:     provisional
 homepage:      http://github.com/kholdstare/stm-chunked-queues/
 bug-reports:   http://github.com/kholdstare/stm-chunked-queues/issues
 copyright:     Copyright (C) 2014 Alexander Kondratskiy
-synopsis:      Thread communication queues that group items/requests that occur close together in time
-description:   Todo
+synopsis:      Chunked Communication Queues
+description:   Thread communication queues that group items/requests that occur close together in time
 build-type:    Simple
 tested-with:   GHC == 7.8.1
 extra-source-files:
-  .ghci
   .gitignore
   .travis.yml
-  .custom.vim
-  travis/cabal-apt-install
-  travis/config
-  CHANGELOG.markdown
   README.markdown
 
 source-repository head
@@ -30,10 +25,9 @@ source-repository head
 
 library
   build-depends:
-    base                    >=   4.7.0,
-
-    stm                     >=   2.4,
-    async                   >=   2.0.1
+    base  >= 4.3      &&  < 5.0,
+    stm   >= 2.4,
+    async >= 2.0.1
 
   exposed-modules:
     Control.Concurrent.STM.TChunkedQueue
@@ -42,9 +36,7 @@ library
   other-modules:
     Control.Concurrent.STM.ChunkedQueue
 
-  ghc-options: -threaded -Wall -fwarn-tabs -O2
-
-  default-language: Haskell98
+  ghc-options: -Wall -fwarn-tabs
 
   hs-source-dirs:
     src
@@ -55,9 +47,8 @@ test-suite UnitTests
 
   ghc-options:    -Wall -threaded
   hs-source-dirs: tests src
-  default-language: Haskell98
   build-depends:
-    base        >= 4.7.0,
+    base        >= 4.3      &&  < 5.0,
     stm         >= 2.4,
     async       >= 2.0.1,
 

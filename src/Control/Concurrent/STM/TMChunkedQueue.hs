@@ -1,6 +1,26 @@
 {-# OPTIONS_GHC -Wall -fwarn-tabs #-}
 {-# LANGUAGE DoAndIfThenElse #-}
 {-# LANGUAGE DeriveDataTypeable #-}
+
+----------------------------------------------------------------
+-- |
+-- Module      :  Control.Concurrent.STM.TMChunkedQueue
+-- Copyright   :  Copyright (c) 2014 Alexander Kondratskiy
+-- License     :  BSD3
+-- Maintainer  :  Alexander Kondratskiy <kholdstare0.0@gmail.com>
+-- Portability :  non-portable (GHC STM, DeriveDataTypeable)
+--
+-- A version of @Control.Concurrent.STM.TQueue@ where the queue is closeable
+-- and allows complete draining. This makes it possible to chunk items based on
+-- a timeout or a "settle period". This is useful when items/requests arriving
+-- through the queue are too granular and have to be combined, while retaining
+-- responsiveness.
+--
+-- Some capabilities of @TQueue@ are missing (such as unget) due to design
+-- tradeoffs.
+--
+-- /Since: 0.1.0/
+------------------------------------------------------------------
 module Control.Concurrent.STM.TMChunkedQueue (
 
     -- * The TMChunkedQueue type
@@ -43,12 +63,12 @@ import Control.Concurrent.STM.TChunkedQueue
 
 ----------------------------------------------------------------
 
+-- | @TMChunkedQueue@ is an abstract type representing a closeable, drainable
+-- FIFO queue.
 data TMChunkedQueue a = TMChunkedQueue {
     _isClosed :: {-# UNPACK #-} !(TVar Bool),
     _queue :: {-# UNPACK #-} !(TChunkedQueue a)
 } deriving Typeable
-    
------------------
 
 
 -- | Build and returns a new instance of @TMChunkedQueue@
@@ -79,10 +99,10 @@ nonEmptyChunkedQueue (ChunkedQueue xs) = ChunkedQueue <$> nonEmptyList xs
 -- | Drain everything contained in the @TMChunkedQueue@, but block if it is
 -- empty. Corollary: never returns empty queue.
 --
--- Closed, Empty     -> Nothing
--- Closed, Non-Empty -> Just [...]
--- Open,   Empty     -> Blocks
--- Open,   Non-Empty -> Just [...]
+-- * Closed, Empty     - @Nothing@
+-- * Closed, Non-Empty - @Just [...]@
+-- * Open,   Empty     - @Blocks@
+-- * Open,   Non-Empty - @Just [...]@
 --
 drainTMChunkedQueue :: TMChunkedQueue a -> STM (Maybe (ChunkedQueue a))
 drainTMChunkedQueue (TMChunkedQueue closed queue) = do
@@ -94,10 +114,10 @@ drainTMChunkedQueue (TMChunkedQueue closed queue) = do
 
 -- | Drain everything contained in the @TMChunkedQueue@. Doesn't block.
 --
--- Closed, Empty     -> Nothing
--- Closed, Non-Empty -> Just [...]
--- Open,   Empty     -> Just []
--- Open,   Non-Empty -> Just [...]
+-- * Closed, Empty     - @Nothing@
+-- * Closed, Non-Empty - @Just [...]@
+-- * Open,   Empty     - @Just []@
+-- * Open,   Non-Empty - @Just [...]@
 --
 tryDrainTMChunkedQueue :: TMChunkedQueue a -> STM (Maybe (ChunkedQueue a))
 tryDrainTMChunkedQueue (TMChunkedQueue closed queue) = do
@@ -148,7 +168,9 @@ isClosedTMChunkedQueue (TMChunkedQueue closed _queue) =
 -- | Keep draining the queue until no more items are seen for at least
 -- the given timeout period. Blocks if the queue is empty to begin with,
 -- and starts timing after the first value appears in the queue.
-drainAndSettleTMChunkedQueue :: Int -> TMChunkedQueue a -> IO (Maybe (ChunkedQueue a))
+drainAndSettleTMChunkedQueue :: Int -- ^ settle period in microseconds
+                             -> TMChunkedQueue a
+                             -> IO (Maybe (ChunkedQueue a))
 drainAndSettleTMChunkedQueue delay queue = do
     maybeChQueue <- atomically $ drainTMChunkedQueue queue
     case maybeChQueue of
@@ -171,7 +193,9 @@ drainAndSettleTMChunkedQueue delay queue = do
 -- | Keep draining the queue for at least the specified time period. Blocks if
 -- the queue is empty to begin with, and starts timing as soon as the first
 -- value appears in the queue.
-drainWithTimeoutTMChunkedQueue :: Int -> TMChunkedQueue a -> IO (Maybe (ChunkedQueue a))
+drainWithTimeoutTMChunkedQueue :: Int -- ^ timeout in microseconds
+                               -> TMChunkedQueue a
+                               -> IO (Maybe (ChunkedQueue a))
 drainWithTimeoutTMChunkedQueue delay queue = do
     stashedQueue <- newTChunkedQueueIO
 
@@ -199,4 +223,3 @@ drainWithTimeoutTMChunkedQueue delay queue = do
 
 
 ----------------------------------------------------------------
------------------------------------------------------------ fin.
