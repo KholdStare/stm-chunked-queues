@@ -2,7 +2,7 @@ name:          stm-chunked-queue
 category:      Todo
 version:       0.1.0.0
 license:       MIT
-cabal-version: >= 1.8
+cabal-version: >= 1.18
 license-file:  LICENSE
 author:        Alexander Kondratskiy
 maintainer:    Alexander Kondratskiy <kholdstare0.0@gmail.com>
@@ -12,7 +12,7 @@ bug-reports:   http://github.com/kholdstare/stm-chunked-queue/issues
 copyright:     Copyright (C) 2014 Alexander Kondratskiy
 synopsis:      Thread communication queues that group items/requests that occur close together in time
 description:   Todo
-build-type:    Custom
+build-type:    Simple
 --tested-with:   GHC == 7.4.1, GHC == 7.4.2, GHC == 7.6.1
 tested-with:   GHC == 7.8.1
 extra-source-files:
@@ -49,6 +49,8 @@ library
 
   ghc-options: -threaded -Wall -fwarn-tabs -O2 -fdicts-cheap -funbox-strict-fields -fexcess-precision
 
+  default-language: Haskell98
+
   hs-source-dirs:
     src
   
@@ -62,6 +64,7 @@ test-suite UnitTests
     --Fresnel
   ghc-options:    -Wall -threaded
   hs-source-dirs: tests
+  default-language: Haskell98
   build-depends:
     base        >= 4.7.0,
     stm         >= 2.4,
