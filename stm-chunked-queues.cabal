@@ -52,13 +52,9 @@ library
 test-suite UnitTests
   type:           exitcode-stdio-1.0
   main-is:        UnitTests.hs
-  other-modules:
-    TChunkedQueue
-    TMChunkedQueue
-    TestUtils
 
   ghc-options:    -Wall -threaded
-  hs-source-dirs: tests
+  hs-source-dirs: tests src
   default-language: Haskell98
   build-depends:
     base        >= 4.7.0,
@@ -67,5 +63,4 @@ test-suite UnitTests
 
     HUnit       >= 1.2,
     tasty       >= 0.8,
-    tasty-hunit >= 0.8,
-    stm-chunked-queue
+    tasty-hunit >= 0.8
