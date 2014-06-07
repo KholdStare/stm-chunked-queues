@@ -1,19 +1,18 @@
-name:          stm-chunked-queue
+name:          stm-chunked-queues
 category:      Todo
 version:       0.1.0.0
-license:       MIT
+license:       BSD3
 cabal-version: >= 1.18
 license-file:  LICENSE
 author:        Alexander Kondratskiy
 maintainer:    Alexander Kondratskiy <kholdstare0.0@gmail.com>
 stability:     provisional
-homepage:      http://github.com/kholdstare/stm-chunked-queue/
-bug-reports:   http://github.com/kholdstare/stm-chunked-queue/issues
+homepage:      http://github.com/kholdstare/stm-chunked-queues/
+bug-reports:   http://github.com/kholdstare/stm-chunked-queues/issues
 copyright:     Copyright (C) 2014 Alexander Kondratskiy
 synopsis:      Thread communication queues that group items/requests that occur close together in time
 description:   Todo
 build-type:    Simple
---tested-with:   GHC == 7.4.1, GHC == 7.4.2, GHC == 7.6.1
 tested-with:   GHC == 7.8.1
 extra-source-files:
   .ghci
@@ -27,7 +26,7 @@ extra-source-files:
 
 source-repository head
   type: git
-  location: git://github.com/kholdstare/stm-chunked-queue.git
+  location: git://github.com/kholdstare/stm-chunked-queues.git
 
 library
   build-depends:
@@ -36,10 +35,6 @@ library
     stm                     >=   2.4,
     async                   >=   2.0.1
 
-    --conduit                 >=   1.1,
-    --conduit-extra           >=   1.1,
-    --stm-conduit             >=   2.4,
-
   exposed-modules:
     Control.Concurrent.STM.TChunkedQueue
     Control.Concurrent.STM.TMChunkedQueue
@@ -47,7 +42,7 @@ library
   other-modules:
     Control.Concurrent.STM.ChunkedQueue
 
-  ghc-options: -threaded -Wall -fwarn-tabs -O2 -fdicts-cheap -funbox-strict-fields -fexcess-precision
+  ghc-options: -threaded -Wall -fwarn-tabs -O2
 
   default-language: Haskell98
 
@@ -61,7 +56,7 @@ test-suite UnitTests
     TChunkedQueue
     TMChunkedQueue
     TestUtils
-    --Fresnel
+
   ghc-options:    -Wall -threaded
   hs-source-dirs: tests
   default-language: Haskell98
