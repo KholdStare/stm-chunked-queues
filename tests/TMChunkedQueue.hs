@@ -3,7 +3,6 @@ module TMChunkedQueue (
     tests
 ) where
 
-{-import Control.Applicative ((<$>))-}
 import Control.Monad.STM   (atomically)
 import Data.Monoid
 
@@ -44,6 +43,7 @@ timeoutTester timeout = testActions $
         collapseMaybe Nothing = mempty
         collapseMaybe (Just xs) = xs
 
+shortPause, longPause :: Int
 shortPause = 10000
 longPause  = 60000
 
@@ -78,7 +78,7 @@ tests =
 
     , testGroup "Timeout"
 
-        [ testGroup "Non-Closing" $
+        [ testGroup "Non-Closing"
             [ testCase "One" $ timeoutTester shortPause [
                     Enqueue [0],
                     Wait longPause,
