@@ -1,27 +1,32 @@
 {-# OPTIONS_GHC -Wall -fwarn-tabs #-}
 {-# LANGUAGE DoAndIfThenElse #-}
+{-# LANGUAGE DeriveDataTypeable #-}
 module Control.Concurrent.STM.TChunkedQueue (
 
-    -- * Simple Chunked Queue
+    -- * The TChunkedQueue type
+    TChunkedQueue,
     ChunkedQueue,
     consumeQueue,
-    TChunkedQueue,
 
-    -- * STM operations
+    -- ** Creating TChunkedQueues
     newTChunkedQueue,
     newTChunkedQueueIO,
+    -- ** Draining TChunkedQueues
     drainTChunkedQueue,
     tryDrainTChunkedQueue,
+    -- ** Writing to TChunkedQueues
     writeTChunkedQueue,
     writeManyTChunkedQueue,
+    -- ** Predicates
     isEmptyTChunkedQueue,
 
-    -- * IO operations
+    -- * Chunked operations
     drainAndSettleTChunkedQueue,
     drainWithTimeoutTChunkedQueue,
 
 ) where
 
+import Data.Typeable       (Typeable)
 import Prelude             hiding (reads)
 import Control.Applicative ((<$>))
 import Control.Monad
@@ -36,6 +41,7 @@ import Control.Concurrent.STM.ChunkedQueue
 
 data TChunkedQueue a = TChunkedQueue
     {-# UNPACK #-} !(TVar (ChunkedQueue a))
+    deriving Typeable
 
 
 -- | Build and returns a new instance of @TChunkedQueue@
@@ -77,6 +83,7 @@ writeManyTChunkedQueue (TChunkedQueue tChQueue) xs = do
     chQueue <- readTVar tChQueue
     writeTVar tChQueue $ enqueueMany chQueue xs
 
+
 -- | Write a value to a @TChunkedQueue@
 writeTChunkedQueue :: TChunkedQueue a -> a -> STM ()
 writeTChunkedQueue (TChunkedQueue tChQueue) x = do
@@ -84,13 +91,17 @@ writeTChunkedQueue (TChunkedQueue tChQueue) x = do
     writeTVar tChQueue $ enqueueOne chQueue x
 
 
+-- | Returns @True@ if the supplied @TChunkedQueue@ is empty.
 isEmptyTChunkedQueue :: TChunkedQueue a -> STM Bool
 isEmptyTChunkedQueue (TChunkedQueue tChQueue) = do
     ChunkedQueue chunks <- readTVar tChQueue
     return $ null chunks
 
 
--- Keep draining the queue until no more items are seen for at least
+----------------------------------------------------------------
+
+
+-- | Keep draining the queue until no more items are seen for at least
 -- the given timeout period. Blocks if the queue is empty to begin with,
 -- and starts timing after the first value appears in the queue.
 drainAndSettleTChunkedQueue :: Int -> TChunkedQueue a -> IO (ChunkedQueue a)
@@ -108,7 +119,7 @@ drainAndSettleTChunkedQueue delay queue = do
                 _ -> go (chunks ++ acc)
 
 
--- Keep draining the queue for at least the specified time period. Blocks if
+-- | Keep draining the queue for at least the specified time period. Blocks if
 -- the queue is empty to begin with, and starts timing as soon as the first
 -- value appears in the queue.
 drainWithTimeoutTChunkedQueue :: Int -> TChunkedQueue a -> IO (ChunkedQueue a)

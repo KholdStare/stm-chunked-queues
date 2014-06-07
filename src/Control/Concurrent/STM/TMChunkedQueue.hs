@@ -8,7 +8,6 @@ module Control.Concurrent.STM.TMChunkedQueue (
     ChunkedQueue,
     consumeQueue,
 
-    -- * STM operations
     -- ** Creating TMChunkedQueues
     newTMChunkedQueue,
     newTMChunkedQueueIO,
@@ -24,7 +23,7 @@ module Control.Concurrent.STM.TMChunkedQueue (
     isEmptyTMChunkedQueue,
     isClosedTMChunkedQueue,
 
-    -- * IO operations
+    -- * Chunked operations
     drainAndSettleTMChunkedQueue,
     drainWithTimeoutTMChunkedQueue,
 
@@ -44,19 +43,12 @@ import Control.Concurrent.STM.TChunkedQueue
 
 ----------------------------------------------------------------
 
--- TODO: make closeable?
 data TMChunkedQueue a = TMChunkedQueue {
     _isClosed :: {-# UNPACK #-} !(TVar Bool),
     _queue :: {-# UNPACK #-} !(TChunkedQueue a)
 } deriving Typeable
     
 -----------------
-
-
-doIfOpen :: TMChunkedQueue a -> (TChunkedQueue a -> STM ()) -> STM ()
-doIfOpen (TMChunkedQueue closed queue) action = do
-    isClosed <- readTVar closed
-    unless isClosed $ action queue
 
 
 -- | Build and returns a new instance of @TMChunkedQueue@
@@ -115,10 +107,17 @@ tryDrainTMChunkedQueue (TMChunkedQueue closed queue) = do
     else Just <$> tryDrainTChunkedQueue queue
 
 
+doIfOpen :: TMChunkedQueue a -> (TChunkedQueue a -> STM ()) -> STM ()
+doIfOpen (TMChunkedQueue closed queue) action = do
+    isClosed <- readTVar closed
+    unless isClosed $ action queue
+
+
 -- | Write many values to a @TMChunkedQueue@
 writeManyTMChunkedQueue :: TMChunkedQueue a -> [a] -> STM ()
 writeManyTMChunkedQueue queue xs =
     void $ doIfOpen queue $ flip writeManyTChunkedQueue xs
+
 
 -- | Write a value to a @TMChunkedQueue@
 writeTMChunkedQueue :: TMChunkedQueue a -> a -> STM ()
@@ -126,6 +125,7 @@ writeTMChunkedQueue queue x =
     void $ doIfOpen queue $ flip writeTChunkedQueue x
 
 
+-- | Returns @True@ if the supplied @TMChunkedQueue@ is empty.
 isEmptyTMChunkedQueue :: TMChunkedQueue a -> STM Bool
 isEmptyTMChunkedQueue (TMChunkedQueue _ queue) = isEmptyTChunkedQueue queue
 
@@ -136,15 +136,16 @@ closeTMChunkedQueue (TMChunkedQueue closed _queue) =
     writeTVar closed True
 
 
--- | Returns @True@ if the supplied @TMQueue@ has been closed.
+-- | Returns @True@ if the supplied @TMChunkedQueue@ has been closed.
 isClosedTMChunkedQueue :: TMChunkedQueue a -> STM Bool
 isClosedTMChunkedQueue (TMChunkedQueue closed _queue) =
     readTVar closed
 
 
----------------------------------------------------------------
+----------------------------------------------------------------
 
--- Keep draining the queue until no more items are seen for at least
+
+-- | Keep draining the queue until no more items are seen for at least
 -- the given timeout period. Blocks if the queue is empty to begin with,
 -- and starts timing after the first value appears in the queue.
 drainAndSettleTMChunkedQueue :: Int -> TMChunkedQueue a -> IO (Maybe (ChunkedQueue a))
@@ -167,7 +168,7 @@ drainAndSettleTMChunkedQueue delay queue = do
                 Just (ChunkedQueue chunks) -> go (chunks ++ acc)
 
 
--- Keep draining the queue for at least the specified time period. Blocks if
+-- | Keep draining the queue for at least the specified time period. Blocks if
 -- the queue is empty to begin with, and starts timing as soon as the first
 -- value appears in the queue.
 drainWithTimeoutTMChunkedQueue :: Int -> TMChunkedQueue a -> IO (Maybe (ChunkedQueue a))
