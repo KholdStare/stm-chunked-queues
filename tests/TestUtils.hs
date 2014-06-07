@@ -23,6 +23,8 @@ import Control.Concurrent (threadDelay)
 
 import Control.Concurrent.STM.TChunkedQueue (ChunkedQueue, consumeQueue)
 
+import Data.Maybe
+
 import Test.Tasty.HUnit
 
 type MaybeDrainFunc q a =  (q a -> IO (Maybe (ChunkedQueue a)))
@@ -51,7 +53,7 @@ consumingThread maybeDrainFunc drainFunc queue areWeDone = go []
 
             done <- atomically $ readTVar areWeDone
 
-            if done
+            if done || isNothing chQueue
             then do
                 remainingItems <- consumeQueue <$> drainFunc queue
                 let result = reverse $
