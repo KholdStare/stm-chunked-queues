@@ -64,7 +64,7 @@ data TChunkedQueue a = TChunkedQueue
     deriving Typeable
 
 
--- | Build and returns a new instance of @TChunkedQueue@
+-- | Build and return a new instance of @TChunkedQueue@
 newTChunkedQueue :: STM (TChunkedQueue a)
 newTChunkedQueue = TChunkedQueue <$> newTVar (ChunkedQueue [])
 
@@ -97,7 +97,9 @@ tryDrainTChunkedQueue (TChunkedQueue tChQueue) = do
     return chQueue
 
 
--- | Write many values to a @TChunkedQueue@
+-- | Write many values to a @TChunkedQueue@. More efficient than
+-- @writeTChunkedQueue@, so prefer using this variant if several items have to
+-- be enqueued
 writeManyTChunkedQueue :: TChunkedQueue a -> [a] -> STM ()
 writeManyTChunkedQueue (TChunkedQueue tChQueue) xs = do
     chQueue <- readTVar tChQueue
@@ -111,7 +113,7 @@ writeTChunkedQueue (TChunkedQueue tChQueue) x = do
     writeTVar tChQueue $ enqueueOne chQueue x
 
 
--- | Returns @True@ if the supplied @TChunkedQueue@ is empty.
+-- | Return @True@ if the supplied @TChunkedQueue@ is empty.
 isEmptyTChunkedQueue :: TChunkedQueue a -> STM Bool
 isEmptyTChunkedQueue (TChunkedQueue tChQueue) = do
     ChunkedQueue chunks <- readTVar tChQueue

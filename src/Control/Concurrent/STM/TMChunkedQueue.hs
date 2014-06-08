@@ -71,7 +71,7 @@ data TMChunkedQueue a = TMChunkedQueue {
 } deriving Typeable
 
 
--- | Build and returns a new instance of @TMChunkedQueue@
+-- | Build and return a new instance of @TMChunkedQueue@
 newTMChunkedQueue :: STM (TMChunkedQueue a)
 newTMChunkedQueue =
     TMChunkedQueue <$>
@@ -133,30 +133,31 @@ doIfOpen (TMChunkedQueue closed queue) action = do
     unless isClosed $ action queue
 
 
--- | Write many values to a @TMChunkedQueue@
+-- | Write many values to a @TMChunkedQueue@. Silently discards values if
+-- closed.
 writeManyTMChunkedQueue :: TMChunkedQueue a -> [a] -> STM ()
 writeManyTMChunkedQueue queue xs =
     void $ doIfOpen queue $ flip writeManyTChunkedQueue xs
 
 
--- | Write a value to a @TMChunkedQueue@
+-- | Write a value to a @TMChunkedQueue@. Silently discards values if closed.
 writeTMChunkedQueue :: TMChunkedQueue a -> a -> STM ()
 writeTMChunkedQueue queue x =
     void $ doIfOpen queue $ flip writeTChunkedQueue x
 
 
--- | Returns @True@ if the supplied @TMChunkedQueue@ is empty.
+-- | Return @True@ if the supplied @TMChunkedQueue@ is empty.
 isEmptyTMChunkedQueue :: TMChunkedQueue a -> STM Bool
 isEmptyTMChunkedQueue (TMChunkedQueue _ queue) = isEmptyTChunkedQueue queue
 
 
--- | Closes the @TMQueue@, preventing any further writes.
+-- | Close the @TMQueue@, preventing any further writes.
 closeTMChunkedQueue :: TMChunkedQueue a -> STM ()
 closeTMChunkedQueue (TMChunkedQueue closed _queue) =
     writeTVar closed True
 
 
--- | Returns @True@ if the supplied @TMChunkedQueue@ has been closed.
+-- | Return @True@ if the supplied @TMChunkedQueue@ has been closed.
 isClosedTMChunkedQueue :: TMChunkedQueue a -> STM Bool
 isClosedTMChunkedQueue (TMChunkedQueue closed _queue) =
     readTVar closed
