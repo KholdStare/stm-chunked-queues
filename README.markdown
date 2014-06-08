@@ -29,23 +29,24 @@ main = do
 
     let enqueue = atomically . writeManyTMChunkedQueue queue
 
-    -- queue will group enqueues below
+    -- queue groups enqueues below
     enqueue [1, 2]
     enqueue [3, 4]
     threadDelay millisecond
     enqueue [5, 6]
 
-    -- long millisecond so listening thread settles
+    -- longer delay so listening thread settles
     threadDelay (4 * millisecond)
 
-    -- listening thread will start new group
+    -- listening thread starts new group
     enqueue [7, 8]
 
+    -- close queue and wait for child to finish
     atomically $ closeTMChunkedQueue queue
     wait finished
 
 
--- | repeatedly drains a queue with a settle period, and prints the resulting
+-- | repeatedly drain a queue with a settle period, and print the resulting
 -- chunks
 settleAndPrint :: Int -> TMChunkedQueue Int -> IO ()
 settleAndPrint delay queue = go
@@ -58,7 +59,7 @@ settleAndPrint delay queue = go
                 Just items -> print (consumeQueue items) >> go
 ```
 
-Which print the following:
+Which prints the following:
 
 ```
 [1,2,3,4,5,6]

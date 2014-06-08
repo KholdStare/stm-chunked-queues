@@ -10,9 +10,9 @@
 -- Maintainer  :  Alexander Kondratskiy <kholdstare0.0@gmail.com>
 -- Portability :  non-portable (GHC STM, DeriveDataTypeable)
 --
--- A version of @Control.Concurrent.STM.TQueue@ where the queue is closeable
+-- A version of "Control.Concurrent.STM.TQueue" where the queue is closeable
 -- and allows complete draining. This makes it possible to chunk items based on
--- a timeout or a "settle period". This is useful when items/requests arriving
+-- a timeout or a settle period. This is useful when items/requests arriving
 -- through the queue are too granular and have to be combined, while retaining
 -- responsiveness.
 --

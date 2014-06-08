@@ -10,9 +10,9 @@
 -- Maintainer  :  Alexander Kondratskiy <kholdstare0.0@gmail.com>
 -- Portability :  non-portable (GHC STM, DeriveDataTypeable)
 --
--- A version of @Control.Concurrent.STM.TQueue@ that allows complete draining.
--- This makes it possible to chunk items based on a timeout or a "settle
--- period". This is useful when items/requests arriving through the queue are
+-- A version of "Control.Concurrent.STM.TQueue" that allows complete draining.
+-- This makes it possible to chunk items based on a timeout or a settle
+-- period. This is useful when items/requests arriving through the queue are
 -- too granular and have to be combined, while retaining responsiveness.
 --
 -- Some capabilities of @TQueue@ are missing (such as unget) due to design
